@@ -1,0 +1,24 @@
+{
+    "author": "stark-industries",
+    "dependencies": {},
+    "keywords": [],
+    "name": "digital-square",
+    "pebble": {
+        "displayName": "Digital Square",
+        "enableMultiJS": true,
+        "messageKeys": [],
+        "projectType": "native",
+        "resources": {
+            "media": []
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "basalt"
+        ],
+        "uuid": "0ed9b312-d1ad-4f9b-8c4a-a87d34d3da2f",
+        "watchapp": {
+            "watchface": true
+        }
+    },
+    "version": "0.1.0"
+}
