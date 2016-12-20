@@ -10,7 +10,7 @@ static TextLayer *s_connection_layer;
 // Static variables - battery
 static uint8_t s_battery_level = 0;
 static bool    s_charging = false;
-static char    battery_text[] = "100% charged";
+static char    battery_text[] = "100% remaining";
 // Static variables - bluetooth
 static bool    s_bt_connected = false;
 // Static variables - vibration
@@ -58,24 +58,36 @@ static void bluetooth_callback(bool connected) {
 /********************************* Draw Layers *******************************/
 
 static void update_canvas(Layer *layer, GContext *ctx){
-  GRect bounds = layer_get_bounds(layer);
   GPoint center = (GPoint) {
     .x = 72,
-    .y = 297,
+    .y = 295,
   };
   graphics_context_set_fill_color(ctx, GColorBlack);
   // Create round rectangle on canvas layer
-  graphics_context_set_fill_color(ctx, GColorBlue);
-  graphics_context_set_stroke_color(ctx, GColorYellow);
+  graphics_context_set_fill_color(ctx, GColorBlack);
+  graphics_context_set_stroke_color(ctx, GColorWhite);
+  graphics_context_set_stroke_width(ctx, 1);
   //graphics_draw_round_rect(ctx, GRect(0, 117, bounds.size.w, 100), 60);
-  graphics_fill_circle(ctx, center, 180);
+  graphics_draw_circle(ctx, center, 180);
   
-  GRect battery_level = GRect(110, 82, 30, 30);
-  GRect phone_level = GRect(115, 87, 20, 20);
+  center = (GPoint) {
+    .x = 72,
+    .y = 298,
+  };
+  
+  graphics_draw_circle(ctx, center, 180);
+  
+  GRect battery_level = GRect(90, 130, 30, 30);
+  GRect phone_level = GRect(95, 135, 20, 20);
   
   // External circle
   graphics_context_set_stroke_color(ctx, GColorDarkGreen);
-  graphics_context_set_fill_color(ctx, GColorGreen);
+  if(s_battery_level == 10){
+    graphics_context_set_fill_color(ctx, GColorRed);
+  }
+  else {
+    graphics_context_set_fill_color(ctx, GColorGreen);
+  }
   graphics_draw_circle(ctx, grect_center_point(&battery_level), 16);
   graphics_fill_radial(ctx, battery_level, GOvalScaleModeFitCircle, 5, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE((s_battery_level*360)/100));
   // Inner circle
@@ -83,6 +95,20 @@ static void update_canvas(Layer *layer, GContext *ctx){
   graphics_context_set_fill_color(ctx, GColorYellow);
   graphics_draw_circle(ctx, grect_center_point(&battery_level), 10);
   graphics_fill_radial(ctx, phone_level, GOvalScaleModeFitCircle, 5, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(270));
+  
+  // Bluetooth status
+  if(s_bt_connected){
+     graphics_context_set_fill_color(ctx, GColorBlue);
+  }
+  else {
+    graphics_context_set_fill_color(ctx, GColorRed);
+  }
+  
+  center = (GPoint) {
+    .x = 39,
+    .y = 145,
+  };
+  graphics_fill_circle(ctx, center, 15);
 }
 /*********************************** Windows *********************************/
 static void main_window_load(Window *window) {
@@ -99,14 +125,14 @@ static void main_window_load(Window *window) {
   text_layer_set_font(s_time_layer, fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS));
   text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
 
-  s_connection_layer = text_layer_create(GRect(0, 85, bounds.size.w, 34));
+  s_connection_layer = text_layer_create(GRect(0, 70, bounds.size.w, 34));
   text_layer_set_text_color(s_connection_layer, GColorWhite);
   text_layer_set_background_color(s_connection_layer, GColorClear);
   text_layer_set_font(s_connection_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
   text_layer_set_text_alignment(s_connection_layer, GTextAlignmentCenter);
   bluetooth_callback(connection_service_peek_pebble_app_connection());
 
-  s_battery_layer = text_layer_create(GRect(0, 130, bounds.size.w, 34));
+  s_battery_layer = text_layer_create(GRect(0, 90, bounds.size.w, 34));
   text_layer_set_text_color(s_battery_layer, GColorWhite);
   text_layer_set_background_color(s_battery_layer, GColorClear);
   text_layer_set_font(s_battery_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
