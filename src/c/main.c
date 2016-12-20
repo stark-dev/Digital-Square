@@ -3,6 +3,7 @@
 // Window
 static Window *s_main_window;
 // Layers
+static Layer     *s_canvas_layer;
 static TextLayer *s_time_layer;
 static TextLayer *s_battery_layer;
 static TextLayer *s_connection_layer;
@@ -54,6 +55,35 @@ static void bluetooth_callback(bool connected) {
   text_layer_set_text(s_connection_layer, s_bt_connected ? "connected" : "disconnected");
 }
 
+/********************************* Draw Layers *******************************/
+
+static void update_canvas(Layer *layer, GContext *ctx){
+  GRect bounds = layer_get_bounds(layer);
+  GPoint center = (GPoint) {
+    .x = 72,
+    .y = 297,
+  };
+  graphics_context_set_fill_color(ctx, GColorBlack);
+  // Create round rectangle on canvas layer
+  graphics_context_set_fill_color(ctx, GColorBlue);
+  graphics_context_set_stroke_color(ctx, GColorYellow);
+  //graphics_draw_round_rect(ctx, GRect(0, 117, bounds.size.w, 100), 60);
+  graphics_fill_circle(ctx, center, 180);
+  
+  GRect battery_level = GRect(110, 82, 30, 30);
+  GRect phone_level = GRect(115, 87, 20, 20);
+  
+  // External circle
+  graphics_context_set_stroke_color(ctx, GColorDarkGreen);
+  graphics_context_set_fill_color(ctx, GColorGreen);
+  graphics_draw_circle(ctx, grect_center_point(&battery_level), 16);
+  graphics_fill_radial(ctx, battery_level, GOvalScaleModeFitCircle, 5, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE((s_battery_level*360)/100));
+  // Inner circle
+  graphics_context_set_stroke_color(ctx, GColorDarkGreen);
+  graphics_context_set_fill_color(ctx, GColorYellow);
+  graphics_draw_circle(ctx, grect_center_point(&battery_level), 10);
+  graphics_fill_radial(ctx, phone_level, GOvalScaleModeFitCircle, 5, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(270));
+}
 /*********************************** Windows *********************************/
 static void main_window_load(Window *window) {
   
@@ -63,22 +93,22 @@ static void main_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_frame(window_layer);
 
-  s_time_layer = text_layer_create(GRect(0, 40, bounds.size.w, 34));
+  s_time_layer = text_layer_create(GRect(0, 20, bounds.size.w, 54));
   text_layer_set_text_color(s_time_layer, GColorWhite);
   text_layer_set_background_color(s_time_layer, GColorRed);
-  text_layer_set_font(s_time_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+  text_layer_set_font(s_time_layer, fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS));
   text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
 
-  s_connection_layer = text_layer_create(GRect(0, 90, bounds.size.w, 34));
+  s_connection_layer = text_layer_create(GRect(0, 85, bounds.size.w, 34));
   text_layer_set_text_color(s_connection_layer, GColorWhite);
-  text_layer_set_background_color(s_connection_layer, GColorGreen);
+  text_layer_set_background_color(s_connection_layer, GColorClear);
   text_layer_set_font(s_connection_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
   text_layer_set_text_alignment(s_connection_layer, GTextAlignmentCenter);
   bluetooth_callback(connection_service_peek_pebble_app_connection());
 
-  s_battery_layer = text_layer_create(GRect(0, 117, bounds.size.w, 34));
+  s_battery_layer = text_layer_create(GRect(0, 130, bounds.size.w, 34));
   text_layer_set_text_color(s_battery_layer, GColorWhite);
-  text_layer_set_background_color(s_battery_layer, GColorBlue);
+  text_layer_set_background_color(s_battery_layer, GColorClear);
   text_layer_set_font(s_battery_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
   text_layer_set_text_alignment(s_battery_layer, GTextAlignmentCenter);
   text_layer_set_text(s_battery_layer, "100% charged");
@@ -99,7 +129,11 @@ static void main_window_load(Window *window) {
     .pebble_app_connection_handler = bluetooth_callback
   });
   
+  // Create canvas
+  s_canvas_layer = layer_create(bounds);
+  layer_set_update_proc(s_canvas_layer, update_canvas);
   // Add layers
+  layer_add_child(window_layer, s_canvas_layer);
   layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
   layer_add_child(window_layer, text_layer_get_layer(s_connection_layer));
   layer_add_child(window_layer, text_layer_get_layer(s_battery_layer));
@@ -121,6 +155,7 @@ static void main_window_unload(Window *window) {
   text_layer_destroy(s_time_layer);
   text_layer_destroy(s_connection_layer);
   text_layer_destroy(s_battery_layer);
+  layer_destroy(s_canvas_layer);
 }
 
 static void init() {
