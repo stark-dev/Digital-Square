@@ -60,7 +60,7 @@ static void bluetooth_callback(bool connected) {
 static void update_canvas(Layer *layer, GContext *ctx){
   GPoint center = (GPoint) {
     .x = 72,
-    .y = 295,
+    .y = 297,
   };
   graphics_context_set_fill_color(ctx, GColorBlack);
   // Create round rectangle on canvas layer
@@ -72,13 +72,13 @@ static void update_canvas(Layer *layer, GContext *ctx){
   
   center = (GPoint) {
     .x = 72,
-    .y = 298,
+    .y = 300,
   };
   
   graphics_draw_circle(ctx, center, 180);
   
-  GRect battery_level = GRect(90, 130, 30, 30);
-  GRect phone_level = GRect(95, 135, 20, 20);
+  GRect battery_level = GRect(90, 132, 30, 30);
+  GRect phone_level = GRect(95, 137, 20, 20);
   
   // External circle
   graphics_context_set_stroke_color(ctx, GColorDarkGreen);
@@ -89,12 +89,10 @@ static void update_canvas(Layer *layer, GContext *ctx){
     graphics_context_set_fill_color(ctx, GColorGreen);
   }
   graphics_draw_circle(ctx, grect_center_point(&battery_level), 16);
-  graphics_fill_radial(ctx, battery_level, GOvalScaleModeFitCircle, 5, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE((s_battery_level*360)/100));
+  graphics_fill_radial(ctx, battery_level, GOvalScaleModeFitCircle, 4, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE((s_battery_level*360)/100));
   // Inner circle
-  graphics_context_set_stroke_color(ctx, GColorDarkGreen);
   graphics_context_set_fill_color(ctx, GColorYellow);
-  graphics_draw_circle(ctx, grect_center_point(&battery_level), 10);
-  graphics_fill_radial(ctx, phone_level, GOvalScaleModeFitCircle, 5, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(270));
+  graphics_fill_radial(ctx, phone_level, GOvalScaleModeFitCircle, 4, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(270));
   
   // Bluetooth status
   if(s_bt_connected){
@@ -106,7 +104,7 @@ static void update_canvas(Layer *layer, GContext *ctx){
   
   center = (GPoint) {
     .x = 39,
-    .y = 145,
+    .y = 147,
   };
   graphics_fill_circle(ctx, center, 15);
 }
