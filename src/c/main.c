@@ -5,27 +5,30 @@ static Window *s_main_window;
 // Layers
 static Layer     *s_canvas_layer;
 static TextLayer *s_time_layer;
-static TextLayer *s_battery_layer;
-static TextLayer *s_connection_layer;
+static TextLayer *s_date_layer;
+static TextLayer *s_day_layer;
 static GBitmap   *s_bt_conn, *s_bt_disc;
 static GBitmap   *s_quiet_on, *s_quiet_off;
 // Static variables - battery
 static uint8_t s_battery_level = 0;
 static bool    s_charging = false;
-static char    battery_text[] = "100% remaining";
 // Static variables - bluetooth
 static bool    s_bt_connected = false;
 // Static variables - vibration
 static bool    s_vibration = false;
 // Static variables - text
 static char    s_time_text[] = "00:00";
+static char    s_date_text[] = "02-Dec-1992";
+static char    s_day_text[] = "Wednesday";
 
 /********************************** Handlers *********************************/
 
 // Time handler
 static void handle_tick(struct tm* tick_time, TimeUnits units_changed) {
-  strftime(s_time_text, sizeof(s_time_text), "%T", tick_time);
-  text_layer_set_text(s_time_layer, s_time_text);
+  // Redraw
+  if (s_canvas_layer) {
+    layer_mark_dirty(s_canvas_layer);
+  }
 }
 
 // Battery callback
@@ -36,14 +39,7 @@ static void battery_callback(BatteryChargeState state) {
   
   if(s_battery_level == 10 && !s_charging)
     vibes_double_pulse();
-
-  // Update meter
-  if (s_charging) {
-    snprintf(battery_text, sizeof(battery_text), "charging");
-  } else {
-    snprintf(battery_text, sizeof(battery_text), "%d%% remaining", s_battery_level);
-  }
-  text_layer_set_text(s_battery_layer, battery_text);
+  layer_mark_dirty(s_canvas_layer);
 }
 
 // Bluetooth callback
@@ -52,14 +48,17 @@ static void bluetooth_callback(bool connected) {
   
   if(s_vibration)
     vibes_double_pulse();
-
-  // Update bt
-  text_layer_set_text(s_connection_layer, s_bt_connected ? "connected" : "disconnected");
+  layer_mark_dirty(s_canvas_layer);
 }
 
 /********************************* Draw Layers *******************************/
 
 static void update_canvas(Layer *layer, GContext *ctx){
+  
+  graphics_context_set_stroke_color(ctx, GColorWhite);
+  graphics_context_set_stroke_width(ctx, 3);
+  graphics_draw_line(ctx, GPoint(0,10), GPoint(144, 10));
+  
   GPoint center = (GPoint) {
     .x = 72,
     .y = 297,
@@ -115,7 +114,20 @@ static void update_canvas(Layer *layer, GContext *ctx){
     graphics_draw_bitmap_in_rect(ctx, s_quiet_off, quiet_rect);
   }
   
+  time_t now = time(NULL);
+  struct tm *tick_time = localtime(&now);
+  
+  strftime(s_time_text, sizeof(s_time_text), "%T", tick_time);
+  text_layer_set_text(s_time_layer, s_time_text);
+  
+  // Update text
+  strftime(s_date_text, sizeof(s_date_text), "%d-%b-%Y", tick_time);
+  text_layer_set_text(s_date_layer, s_date_text);
+  
+  strftime(s_day_text, sizeof(s_day_text), "%A", tick_time);
+  text_layer_set_text(s_day_layer, s_day_text);
 }
+
 /*********************************** Windows *********************************/
 static void main_window_load(Window *window) {
   
@@ -126,35 +138,45 @@ static void main_window_load(Window *window) {
   GRect bounds = layer_get_frame(window_layer);
   
   // Time Layer
-  s_time_layer = text_layer_create(GRect(0, 15, bounds.size.w, 55));
+  s_time_layer = text_layer_create(GRect(0, 13, bounds.size.w, 55));
   text_layer_set_text_color(s_time_layer, GColorWhite);
   text_layer_set_background_color(s_time_layer, GColorRed);
   text_layer_set_font(s_time_layer, fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS));
   text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
   
-  // Data Layer
-  s_connection_layer = text_layer_create(GRect(0, 70, bounds.size.w, 25));
-  text_layer_set_text_color(s_connection_layer, GColorWhite);
-  text_layer_set_background_color(s_connection_layer, GColorBlue);
-  text_layer_set_font(s_connection_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
-  text_layer_set_text_alignment(s_connection_layer, GTextAlignmentCenter);
-  bluetooth_callback(connection_service_peek_pebble_app_connection());
+  // Date Layer
+  s_date_layer = text_layer_create(GRect(0, 70, bounds.size.w, 22));
+  text_layer_set_text_color(s_date_layer, GColorWhite);
+  text_layer_set_background_color(s_date_layer, GColorClear);
+  text_layer_set_font(s_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+  text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);
+  text_layer_set_text(s_date_layer, "25-DEC-2016");
 
   // Day Layer
-  s_battery_layer = text_layer_create(GRect(0, 95, bounds.size.w, 20));
-  text_layer_set_text_color(s_battery_layer, GColorWhite);
-  text_layer_set_background_color(s_battery_layer, GColorYellow);
-  text_layer_set_font(s_battery_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
-  text_layer_set_text_alignment(s_battery_layer, GTextAlignmentCenter);
-  text_layer_set_text(s_battery_layer, "100% charged");
+  s_day_layer = text_layer_create(GRect(0, 92, bounds.size.w, 22));
+  text_layer_set_text_color(s_day_layer, GColorWhite);
+  text_layer_set_background_color(s_day_layer, GColorClear);
+  text_layer_set_font(s_day_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
+  text_layer_set_text_alignment(s_day_layer, GTextAlignmentCenter);
+  text_layer_set_text(s_day_layer, "Saturday");
 
-  // Bluetooth status
+  // Bluetooth bitmaps
+  
   s_bt_conn = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_CONNECTED);
   s_bt_disc = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_DISCONNECTED);
   
-  // Quiet Time status
+  // Quiet Time bitmaps
   s_quiet_on = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_QUIET);
   s_quiet_off = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_VIBE);
+  
+  // Create canvas
+  s_canvas_layer = layer_create(bounds);
+  layer_set_update_proc(s_canvas_layer, update_canvas);
+  // Add layers
+  layer_add_child(window_layer, s_canvas_layer);
+  layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
+  layer_add_child(window_layer, text_layer_get_layer(s_date_layer));
+  layer_add_child(window_layer, text_layer_get_layer(s_day_layer));
   
   // Retrieve time
   time_t now = time(NULL);
@@ -171,15 +193,6 @@ static void main_window_load(Window *window) {
   connection_service_subscribe((ConnectionHandlers) {
     .pebble_app_connection_handler = bluetooth_callback
   });
-  
-  // Create canvas
-  s_canvas_layer = layer_create(bounds);
-  layer_set_update_proc(s_canvas_layer, update_canvas);
-  // Add layers
-  layer_add_child(window_layer, s_canvas_layer);
-  layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
-  layer_add_child(window_layer, text_layer_get_layer(s_connection_layer));
-  layer_add_child(window_layer, text_layer_get_layer(s_battery_layer));
 
   // Update battery
   battery_callback(battery_state_service_peek());
@@ -200,8 +213,8 @@ static void main_window_unload(Window *window) {
   gbitmap_destroy(s_quiet_on);
   gbitmap_destroy(s_quiet_off);
   text_layer_destroy(s_time_layer);
-  text_layer_destroy(s_connection_layer);
-  text_layer_destroy(s_battery_layer);
+  text_layer_destroy(s_date_layer);
+  text_layer_destroy(s_day_layer);
   layer_destroy(s_canvas_layer);
 }
 
