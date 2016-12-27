@@ -7,6 +7,8 @@ static Layer     *s_canvas_layer;
 static TextLayer *s_time_layer;
 static TextLayer *s_battery_layer;
 static TextLayer *s_connection_layer;
+static GBitmap   *s_bt_conn, *s_bt_disc;
+static GBitmap   *s_quiet_on, *s_quiet_off;
 // Static variables - battery
 static uint8_t s_battery_level = 0;
 static bool    s_charging = false;
@@ -63,11 +65,9 @@ static void update_canvas(Layer *layer, GContext *ctx){
     .y = 297,
   };
   graphics_context_set_fill_color(ctx, GColorBlack);
-  // Create round rectangle on canvas layer
   graphics_context_set_fill_color(ctx, GColorBlack);
   graphics_context_set_stroke_color(ctx, GColorWhite);
   graphics_context_set_stroke_width(ctx, 1);
-  //graphics_draw_round_rect(ctx, GRect(0, 117, bounds.size.w, 100), 60);
   graphics_draw_circle(ctx, center, 180);
   
   center = (GPoint) {
@@ -77,8 +77,8 @@ static void update_canvas(Layer *layer, GContext *ctx){
   
   graphics_draw_circle(ctx, center, 180);
   
-  GRect battery_level = GRect(90, 132, 30, 30);
-  GRect phone_level = GRect(95, 137, 20, 20);
+  GRect battery_level = GRect(57, 132, 30, 30);
+  GRect phone_level = GRect(62, 137, 20, 20);
   
   // External circle
   graphics_context_set_stroke_color(ctx, GColorDarkGreen);
@@ -90,23 +90,31 @@ static void update_canvas(Layer *layer, GContext *ctx){
   }
   graphics_draw_circle(ctx, grect_center_point(&battery_level), 16);
   graphics_fill_radial(ctx, battery_level, GOvalScaleModeFitCircle, 4, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE((s_battery_level*360)/100));
+  
   // Inner circle
   graphics_context_set_fill_color(ctx, GColorYellow);
   graphics_fill_radial(ctx, phone_level, GOvalScaleModeFitCircle, 4, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(270));
   
   // Bluetooth status
+  GRect bt_rect = GRect(0, 135, 48, 30);
+
   if(s_bt_connected){
-     graphics_context_set_fill_color(ctx, GColorBlue);
+    graphics_draw_bitmap_in_rect(ctx, s_bt_conn, bt_rect);
   }
   else {
-    graphics_context_set_fill_color(ctx, GColorRed);
+    graphics_draw_bitmap_in_rect(ctx, s_bt_disc, bt_rect);
   }
   
-  center = (GPoint) {
-    .x = 39,
-    .y = 147,
-  };
-  graphics_fill_circle(ctx, center, 15);
+  // Quiet time status
+  GRect quiet_rect = GRect(96, 135, 48, 30);
+  
+  if(quiet_time_is_active()){
+    graphics_draw_bitmap_in_rect(ctx, s_quiet_on, quiet_rect);
+  }
+  else {
+    graphics_draw_bitmap_in_rect(ctx, s_quiet_off, quiet_rect);
+  }
+  
 }
 /*********************************** Windows *********************************/
 static void main_window_load(Window *window) {
@@ -116,27 +124,38 @@ static void main_window_load(Window *window) {
   
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_frame(window_layer);
-
-  s_time_layer = text_layer_create(GRect(0, 20, bounds.size.w, 54));
+  
+  // Time Layer
+  s_time_layer = text_layer_create(GRect(0, 15, bounds.size.w, 55));
   text_layer_set_text_color(s_time_layer, GColorWhite);
   text_layer_set_background_color(s_time_layer, GColorRed);
   text_layer_set_font(s_time_layer, fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS));
   text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
-
-  s_connection_layer = text_layer_create(GRect(0, 70, bounds.size.w, 34));
+  
+  // Data Layer
+  s_connection_layer = text_layer_create(GRect(0, 70, bounds.size.w, 25));
   text_layer_set_text_color(s_connection_layer, GColorWhite);
-  text_layer_set_background_color(s_connection_layer, GColorClear);
+  text_layer_set_background_color(s_connection_layer, GColorBlue);
   text_layer_set_font(s_connection_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
   text_layer_set_text_alignment(s_connection_layer, GTextAlignmentCenter);
   bluetooth_callback(connection_service_peek_pebble_app_connection());
 
-  s_battery_layer = text_layer_create(GRect(0, 90, bounds.size.w, 34));
+  // Day Layer
+  s_battery_layer = text_layer_create(GRect(0, 95, bounds.size.w, 20));
   text_layer_set_text_color(s_battery_layer, GColorWhite);
-  text_layer_set_background_color(s_battery_layer, GColorClear);
+  text_layer_set_background_color(s_battery_layer, GColorYellow);
   text_layer_set_font(s_battery_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
   text_layer_set_text_alignment(s_battery_layer, GTextAlignmentCenter);
   text_layer_set_text(s_battery_layer, "100% charged");
 
+  // Bluetooth status
+  s_bt_conn = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_CONNECTED);
+  s_bt_disc = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_DISCONNECTED);
+  
+  // Quiet Time status
+  s_quiet_on = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_QUIET);
+  s_quiet_off = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_VIBE);
+  
   // Retrieve time
   time_t now = time(NULL);
   struct tm *current_time = localtime(&now);
@@ -176,6 +195,10 @@ static void main_window_unload(Window *window) {
   tick_timer_service_unsubscribe();
   battery_state_service_unsubscribe();
   connection_service_unsubscribe();
+  gbitmap_destroy(s_bt_conn);
+  gbitmap_destroy(s_bt_disc);
+  gbitmap_destroy(s_quiet_on);
+  gbitmap_destroy(s_quiet_off);
   text_layer_destroy(s_time_layer);
   text_layer_destroy(s_connection_layer);
   text_layer_destroy(s_battery_layer);

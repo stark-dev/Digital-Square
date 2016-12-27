@@ -11,16 +11,32 @@
         "resources": {
             "media": [
                 {
-                    "file": "images/bt_disconnected",
-                    "name": "IMAGE_BT_RED",
+                    "file": "images/quiet_off",
+                    "name": "IMAGE_VIBE",
                     "targetPlatforms": [
                         "basalt"
                     ],
                     "type": "bitmap"
                 },
                 {
-                    "file": "images/bt_connected",
-                    "name": "IMAGE_BT_BLUE",
+                    "file": "images/quiet_on",
+                    "name": "IMAGE_QUIET",
+                    "targetPlatforms": [
+                        "basalt"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/disconnected",
+                    "name": "IMAGE_DISCONNECTED",
+                    "targetPlatforms": [
+                        "basalt"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/connected",
+                    "name": "IMAGE_CONNECTED",
                     "targetPlatforms": [
                         "basalt"
                     ],
