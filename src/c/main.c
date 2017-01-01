@@ -9,6 +9,7 @@ static TextLayer *s_date_layer;
 static TextLayer *s_day_layer;
 static GBitmap   *s_bt_conn, *s_bt_disc;
 static GBitmap   *s_quiet_on, *s_quiet_off;
+static GBitmap   *s_battery, *s_battery_low, *s_battery_ch;
 // Static variables - battery
 static uint8_t s_battery_level = 0;
 static bool    s_charging = false;
@@ -76,9 +77,20 @@ static void update_canvas(Layer *layer, GContext *ctx){
   
   graphics_draw_circle(ctx, center, 180);
   
-  GRect battery_level = GRect(57, 132, 30, 30);
-  GRect phone_level = GRect(62, 137, 20, 20);
+  GRect battery_level = GRect(55, 127, 34, 34);
+  GRect battery_image = GRect(62, 134, 20, 20);
   
+  // Battery icon
+  if(s_charging){
+    graphics_draw_bitmap_in_rect(ctx, s_battery_ch, battery_image);
+  }
+  else if(s_battery_level <= 10){
+    graphics_draw_bitmap_in_rect(ctx, s_battery_low, battery_image);
+  }
+  else{
+    graphics_draw_bitmap_in_rect(ctx, s_battery, battery_image);
+  }
+
   // External circle
   graphics_context_set_stroke_color(ctx, GColorDarkGreen);
   if(s_battery_level == 10){
@@ -89,10 +101,6 @@ static void update_canvas(Layer *layer, GContext *ctx){
   }
   graphics_draw_circle(ctx, grect_center_point(&battery_level), 16);
   graphics_fill_radial(ctx, battery_level, GOvalScaleModeFitCircle, 4, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE((s_battery_level*360)/100));
-  
-  // Inner circle
-  graphics_context_set_fill_color(ctx, GColorYellow);
-  graphics_fill_radial(ctx, phone_level, GOvalScaleModeFitCircle, 4, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(270));
   
   // Bluetooth status
   GRect bt_rect = GRect(0, 135, 48, 30);
@@ -138,14 +146,14 @@ static void main_window_load(Window *window) {
   GRect bounds = layer_get_frame(window_layer);
   
   // Time Layer
-  s_time_layer = text_layer_create(GRect(0, 13, bounds.size.w, 55));
+  s_time_layer = text_layer_create(GRect(0, 35, bounds.size.w, 55));
   text_layer_set_text_color(s_time_layer, GColorWhite);
   text_layer_set_background_color(s_time_layer, GColorRed);
   text_layer_set_font(s_time_layer, fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS));
   text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
   
   // Date Layer
-  s_date_layer = text_layer_create(GRect(0, 70, bounds.size.w, 22));
+  s_date_layer = text_layer_create(GRect(0, 12, bounds.size.w, 22));
   text_layer_set_text_color(s_date_layer, GColorWhite);
   text_layer_set_background_color(s_date_layer, GColorClear);
   text_layer_set_font(s_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
@@ -153,7 +161,7 @@ static void main_window_load(Window *window) {
   text_layer_set_text(s_date_layer, "25-DEC-2016");
 
   // Day Layer
-  s_day_layer = text_layer_create(GRect(0, 92, bounds.size.w, 22));
+  s_day_layer = text_layer_create(GRect(0, 90, bounds.size.w, 22));
   text_layer_set_text_color(s_day_layer, GColorWhite);
   text_layer_set_background_color(s_day_layer, GColorClear);
   text_layer_set_font(s_day_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
@@ -168,6 +176,11 @@ static void main_window_load(Window *window) {
   // Quiet Time bitmaps
   s_quiet_on = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_QUIET);
   s_quiet_off = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_VIBE);
+  
+  // Battery bitmaps
+  s_battery = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY);
+  s_battery_low = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_LOW);
+  s_battery_ch = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_CH);
   
   // Create canvas
   s_canvas_layer = layer_create(bounds);
@@ -212,6 +225,9 @@ static void main_window_unload(Window *window) {
   gbitmap_destroy(s_bt_disc);
   gbitmap_destroy(s_quiet_on);
   gbitmap_destroy(s_quiet_off);
+  gbitmap_destroy(s_battery);
+  gbitmap_destroy(s_battery_low);
+  gbitmap_destroy(s_battery_ch);
   text_layer_destroy(s_time_layer);
   text_layer_destroy(s_date_layer);
   text_layer_destroy(s_day_layer);

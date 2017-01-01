@@ -11,6 +11,30 @@
         "resources": {
             "media": [
                 {
+                    "file": "images/battery_low",
+                    "name": "IMAGE_BATTERY_LOW",
+                    "targetPlatforms": [
+                        "basalt"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/battery_charging",
+                    "name": "IMAGE_BATTERY_CH",
+                    "targetPlatforms": [
+                        "basalt"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/battery",
+                    "name": "IMAGE_BATTERY",
+                    "targetPlatforms": [
+                        "basalt"
+                    ],
+                    "type": "bitmap"
+                },
+                {
                     "file": "images/quiet_off",
                     "name": "IMAGE_VIBE",
                     "targetPlatforms": [
