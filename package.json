@@ -2,14 +2,23 @@
     "author": "stark-industries",
     "dependencies": {},
     "keywords": [],
-    "name": "digital-square",
+    "name": "time-square",
     "pebble": {
-        "displayName": "Digital Square",
+        "displayName": "Time Square",
         "enableMultiJS": true,
         "messageKeys": [],
         "projectType": "native",
         "resources": {
             "media": [
+                {
+                    "file": "images/menu image",
+                    "menuIcon": true,
+                    "name": "IMAGE_MENU",
+                    "targetPlatforms": [
+                        "basalt"
+                    ],
+                    "type": "bitmap"
+                },
                 {
                     "file": "images/battery_low",
                     "name": "IMAGE_BATTERY_LOW",
