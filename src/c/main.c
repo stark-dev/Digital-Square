@@ -97,7 +97,10 @@ static void update_canvas(Layer *layer, GContext *ctx){
   // Battery circle
   graphics_context_set_stroke_color(ctx, GColorDarkGreen);
   graphics_context_set_stroke_width(ctx, 2);
-  if(s_battery_level == 10){
+  if(s_charging){
+    graphics_context_set_fill_color(ctx, GColorYellow);
+  }
+  else if(s_battery_level <= 10){
     graphics_context_set_fill_color(ctx, GColorRed);
   }
   else {
