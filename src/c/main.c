@@ -80,8 +80,8 @@ static void update_canvas(Layer *layer, GContext *ctx){
   
   // Draw battery status 
   
-  GRect battery_level = GRect(55, 127, 34, 34);
-  GRect battery_image = GRect(62, 134, 20, 20);
+  GRect battery_level = GRect(54, 128, 34, 34);
+  GRect battery_image = GRect(61, 135, 20, 20);
   
   // Battery icon
   if(s_charging){
@@ -96,14 +96,15 @@ static void update_canvas(Layer *layer, GContext *ctx){
 
   // Battery circle
   graphics_context_set_stroke_color(ctx, GColorDarkGreen);
+  graphics_context_set_stroke_width(ctx, 2);
   if(s_battery_level == 10){
     graphics_context_set_fill_color(ctx, GColorRed);
   }
   else {
     graphics_context_set_fill_color(ctx, GColorGreen);
   }
-  graphics_draw_circle(ctx, grect_center_point(&battery_level), 16);
-  graphics_fill_radial(ctx, battery_level, GOvalScaleModeFitCircle, 4, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE((s_battery_level*360)/100));
+  graphics_draw_circle(ctx, grect_center_point(&battery_level), 15);
+  graphics_fill_radial(ctx, battery_level, GOvalScaleModeFitCircle, 5, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE((s_battery_level*360)/100));
   
   // Bluetooth status
   GRect bt_rect = GRect(0, 135, 48, 30);
