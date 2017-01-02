@@ -1,7 +1,7 @@
 #include <pebble.h>
 
 // Window
-static Window *s_main_window;
+static Window    *s_main_window;
 // Layers
 static Layer     *s_canvas_layer;
 static TextLayer *s_time_layer;
@@ -11,16 +11,16 @@ static GBitmap   *s_bt_conn, *s_bt_disc;
 static GBitmap   *s_quiet_on, *s_quiet_off;
 static GBitmap   *s_battery, *s_battery_low, *s_battery_ch;
 // Static variables - battery
-static uint8_t s_battery_level = 0;
-static bool    s_charging = false;
+static uint8_t   s_battery_level = 0;
+static bool      s_charging = false;
 // Static variables - bluetooth
-static bool    s_bt_connected = false;
+static bool      s_bt_connected = false;
 // Static variables - vibration
-static bool    s_vibration = false;
+static bool      s_vibration = false;
 // Static variables - text
-static char    s_time_text[] = "00:00";
-static char    s_date_text[] = "02-Dec-1992";
-static char    s_day_text[] = "Wednesday";
+static char      s_time_text[] = "00:00";
+static char      s_date_text[] = "02-Dec-1992";
+static char      s_day_text[] = "Wednesday";
 
 /********************************** Handlers *********************************/
 
@@ -57,17 +57,18 @@ static void bluetooth_callback(bool connected) {
 static void update_canvas(Layer *layer, GContext *ctx){
   
   graphics_context_set_stroke_color(ctx, GColorWhite);
+  graphics_context_set_fill_color(ctx, GColorBlack);
   graphics_context_set_stroke_width(ctx, 3);
   graphics_draw_line(ctx, GPoint(0,10), GPoint(144, 10));
   
+  graphics_context_set_stroke_width(ctx, 1);
+
+  // Draw circles
   GPoint center = (GPoint) {
     .x = 72,
     .y = 297,
   };
-  graphics_context_set_fill_color(ctx, GColorBlack);
-  graphics_context_set_fill_color(ctx, GColorBlack);
-  graphics_context_set_stroke_color(ctx, GColorWhite);
-  graphics_context_set_stroke_width(ctx, 1);
+
   graphics_draw_circle(ctx, center, 180);
   
   center = (GPoint) {
@@ -76,6 +77,8 @@ static void update_canvas(Layer *layer, GContext *ctx){
   };
   
   graphics_draw_circle(ctx, center, 180);
+  
+  // Draw battery status 
   
   GRect battery_level = GRect(55, 127, 34, 34);
   GRect battery_image = GRect(62, 134, 20, 20);
@@ -91,7 +94,7 @@ static void update_canvas(Layer *layer, GContext *ctx){
     graphics_draw_bitmap_in_rect(ctx, s_battery, battery_image);
   }
 
-  // External circle
+  // Battery circle
   graphics_context_set_stroke_color(ctx, GColorDarkGreen);
   if(s_battery_level == 10){
     graphics_context_set_fill_color(ctx, GColorRed);
@@ -125,10 +128,10 @@ static void update_canvas(Layer *layer, GContext *ctx){
   time_t now = time(NULL);
   struct tm *tick_time = localtime(&now);
   
+  // Update text
   strftime(s_time_text, sizeof(s_time_text), "%T", tick_time);
   text_layer_set_text(s_time_layer, s_time_text);
   
-  // Update text
   strftime(s_date_text, sizeof(s_date_text), "%d-%b-%Y", tick_time);
   text_layer_set_text(s_date_layer, s_date_text);
   
@@ -158,7 +161,7 @@ static void main_window_load(Window *window) {
   text_layer_set_background_color(s_date_layer, GColorClear);
   text_layer_set_font(s_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
   text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);
-  text_layer_set_text(s_date_layer, "25-DEC-2016");
+  text_layer_set_text(s_date_layer, "02-Dec-1992");
 
   // Day Layer
   s_day_layer = text_layer_create(GRect(0, 90, bounds.size.w, 22));
@@ -166,10 +169,9 @@ static void main_window_load(Window *window) {
   text_layer_set_background_color(s_day_layer, GColorClear);
   text_layer_set_font(s_day_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
   text_layer_set_text_alignment(s_day_layer, GTextAlignmentCenter);
-  text_layer_set_text(s_day_layer, "Saturday");
+  text_layer_set_text(s_day_layer, "Wednesday");
 
-  // Bluetooth bitmaps
-  
+  // Bluetooth bitmaps 
   s_bt_conn = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_CONNECTED);
   s_bt_disc = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_DISCONNECTED);
   
@@ -185,6 +187,7 @@ static void main_window_load(Window *window) {
   // Create canvas
   s_canvas_layer = layer_create(bounds);
   layer_set_update_proc(s_canvas_layer, update_canvas);
+  
   // Add layers
   layer_add_child(window_layer, s_canvas_layer);
   layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
