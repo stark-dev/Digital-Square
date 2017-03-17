@@ -38,8 +38,6 @@ static void battery_callback(BatteryChargeState state) {
   s_battery_level = state.charge_percent;
   s_charging = state.is_charging;
   
-  if(s_battery_level == 10 && !s_charging)
-    vibes_double_pulse();
   layer_mark_dirty(s_canvas_layer);
 }
 
