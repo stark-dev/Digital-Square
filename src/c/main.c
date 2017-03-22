@@ -9,7 +9,7 @@ static TextLayer *s_date_layer;
 static TextLayer *s_day_layer;
 static GBitmap   *s_bt_conn, *s_bt_disc;
 static GBitmap   *s_quiet_on, *s_quiet_off;
-static GBitmap   *s_battery, *s_battery_low, *s_battery_ch;
+static GBitmap   *s_battery, *s_battery_low, *s_battery_very_low, *s_battery_ch;
 // Static variables - battery
 static uint8_t   s_battery_level = 0;
 static bool      s_charging = false;
@@ -54,6 +54,9 @@ static void bluetooth_callback(bool connected) {
 
 static void update_canvas(Layer *layer, GContext *ctx){
   
+  time_t now = time(NULL);
+  struct tm *tick_time = localtime(&now);
+  
   graphics_context_set_stroke_color(ctx, GColorWhite);
   graphics_context_set_fill_color(ctx, GColorBlack);
   graphics_context_set_stroke_width(ctx, 3);
@@ -85,8 +88,11 @@ static void update_canvas(Layer *layer, GContext *ctx){
   if(s_charging){
     graphics_draw_bitmap_in_rect(ctx, s_battery_ch, battery_image);
   }
-  else if(s_battery_level <= 10){
+  else if(s_battery_level <= 20 && s_battery_level > 10){
     graphics_draw_bitmap_in_rect(ctx, s_battery_low, battery_image);
+  }
+  else if(s_battery_level <= 10){
+    graphics_draw_bitmap_in_rect(ctx, s_battery_very_low, battery_image);
   }
   else{
     graphics_draw_bitmap_in_rect(ctx, s_battery, battery_image);
@@ -96,6 +102,9 @@ static void update_canvas(Layer *layer, GContext *ctx){
   graphics_context_set_stroke_color(ctx, GColorDarkGreen);
   graphics_context_set_stroke_width(ctx, 2);
   if(s_charging){
+    graphics_context_set_fill_color(ctx, GColorYellow);
+  }
+  else if(s_battery_level <= 20 && s_battery_level > 10){
     graphics_context_set_fill_color(ctx, GColorYellow);
   }
   else if(s_battery_level <= 10){
@@ -126,9 +135,6 @@ static void update_canvas(Layer *layer, GContext *ctx){
   else {
     graphics_draw_bitmap_in_rect(ctx, s_quiet_off, quiet_rect);
   }
-  
-  time_t now = time(NULL);
-  struct tm *tick_time = localtime(&now);
   
   // Update text
   strftime(s_time_text, sizeof(s_time_text), "%T", tick_time);
@@ -184,6 +190,7 @@ static void main_window_load(Window *window) {
   // Battery bitmaps
   s_battery = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY);
   s_battery_low = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_LOW);
+  s_battery_very_low = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_VERY_LOW);
   s_battery_ch = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_CH);
   
   // Create canvas
@@ -195,14 +202,6 @@ static void main_window_load(Window *window) {
   layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
   layer_add_child(window_layer, text_layer_get_layer(s_date_layer));
   layer_add_child(window_layer, text_layer_get_layer(s_day_layer));
-  
-  // Retrieve time
-  time_t now = time(NULL);
-  struct tm *current_time = localtime(&now);
-  handle_tick(current_time, MINUTE_UNIT);
-  
-  // Subscribe to tick handler
-  tick_timer_service_subscribe(MINUTE_UNIT, handle_tick);
   
   // Subscribe to battery service
   battery_state_service_subscribe(battery_callback);
@@ -218,6 +217,13 @@ static void main_window_load(Window *window) {
   // Update connection
   bluetooth_callback(connection_service_peek_pebble_app_connection());
   
+  // Retrieve time
+  time_t now = time(NULL);
+  struct tm *current_time = localtime(&now);
+  handle_tick(current_time, MINUTE_UNIT);
+  // Subscribe to tick handler
+  tick_timer_service_subscribe(MINUTE_UNIT, handle_tick);
+  
   // Enable vibration after startup
   s_vibration = true;
 }
@@ -232,6 +238,7 @@ static void main_window_unload(Window *window) {
   gbitmap_destroy(s_quiet_off);
   gbitmap_destroy(s_battery);
   gbitmap_destroy(s_battery_low);
+  gbitmap_destroy(s_battery_very_low);
   gbitmap_destroy(s_battery_ch);
   text_layer_destroy(s_time_layer);
   text_layer_destroy(s_date_layer);
