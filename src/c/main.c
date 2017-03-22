@@ -60,7 +60,7 @@ static void update_canvas(Layer *layer, GContext *ctx){
   graphics_context_set_stroke_color(ctx, GColorWhite);
   graphics_context_set_fill_color(ctx, GColorBlack);
   graphics_context_set_stroke_width(ctx, 3);
-  graphics_draw_line(ctx, GPoint(0,10), GPoint(144, 10));
+  // graphics_draw_line(ctx, GPoint(0,10), GPoint(144, 10));
   
   graphics_context_set_stroke_width(ctx, 1);
 
@@ -157,14 +157,14 @@ static void main_window_load(Window *window) {
   GRect bounds = layer_get_frame(window_layer);
   
   // Time Layer
-  s_time_layer = text_layer_create(GRect(0, 35, bounds.size.w, 55));
+  s_time_layer = text_layer_create(GRect(0, 31, bounds.size.w, 55));
   text_layer_set_text_color(s_time_layer, GColorWhite);
   text_layer_set_background_color(s_time_layer, GColorRed);
   text_layer_set_font(s_time_layer, fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS));
   text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
   
   // Date Layer
-  s_date_layer = text_layer_create(GRect(0, 12, bounds.size.w, 22));
+  s_date_layer = text_layer_create(GRect(0, 5, bounds.size.w, 22));
   text_layer_set_text_color(s_date_layer, GColorWhite);
   text_layer_set_background_color(s_date_layer, GColorClear);
   text_layer_set_font(s_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
